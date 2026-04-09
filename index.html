@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimation Consommation Électrique</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f7f7f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 480px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .slider-section {
+    margin-bottom: 2rem;
+  }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .slider-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+  }
+
+  .slider-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e8e8e8;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    cursor: pointer;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    cursor: pointer;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .slider-track-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+  }
+
+  .result-card {
+    background: #f7f7f5;
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .result-card .rc-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  .result-card .rc-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .result-card .rc-formula {
+    font-size: 12px;
+    color: #888;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-top: 2px;
+  }
+
+  .name-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .name-section label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .name-section input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  .name-section input[type="text"]:focus {
+    border-color: #1a1a1a;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .submit-btn:hover { opacity: 0.85; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+
+  .feedback.success {
+    background: #edfaf4;
+    color: #1a7a4a;
+    border: 1px solid #a3e6c6;
+    display: block;
+  }
+
+  .feedback.error {
+    background: #fff0f0;
+    color: #c0392b;
+    border: 1px solid #f5c6c6;
+    display: block;
+  }
+
+  .feedback.loading {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    display: block;
+  }
+
+  .bar-wrap {
+    height: 4px;
+    background: #e8e8e8;
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: #1a1a1a;
+    border-radius: 2px;
+    transition: width 0.15s;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>Estimation Consommation Électrique</h1>
+    <p>Déplacez le curseur pour régler la valeur</p>
+  </div>
+
+  <div class="slider-section">
+    <div class="slider-header">
+      <span class="slider-label">Valeur (0 – 100)</span>
+      <span class="slider-value" id="val-display">50</span>
+    </div>
+    <input type="range" id="slider" min="0" max="100" value="50" step="1">
+    <div class="slider-track-labels">
+      <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+    </div>
+    <div class="bar-wrap"><div class="bar-fill" id="bar" style="width:50%"></div></div>
+  </div>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <div class="rc-label">Consommation estimée</div>
+      <div class="rc-value" id="result-val">6,36</div>
+      <div class="rc-formula">kWh</div>
+    </div>
+    <div class="result-card">
+      <div class="rc-label">Formule</div>
+      <div class="rc-formula" id="formula-display" style="font-size:13px; margin-top:6px;">3,36 + 0,06 × 50</div>
+    </div>
+  </div>
+
+  <div class="name-section">
+    <label for="nom">Nom de la mesure (optionnel)</label>
+    <input type="text" id="nom" placeholder="Ex : Mesure du 9 avril…">
+  </div>
+
+  <button class="submit-btn" id="send-btn" onclick="sendToNotion()">
+    Enregistrer dans Notion
+  </button>
+
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+const DB_ID = "33d45c4b899e80b59246d62bc7e786c0";
+
+const slider = document.getElementById('slider');
+slider.addEventListener('input', function() { update(this.value); });
+
+function update(v) {
+  const n = parseInt(v);
+  const res = 3.36 + 0.06 * n;
+  document.getElementById('val-display').textContent = n;
+  document.getElementById('result-val').textContent = res.toFixed(2).replace('.', ',');
+  document.getElementById('formula-display').textContent = '3,36 + 0,06 × ' + n;
+  document.getElementById('bar').style.width = n + '%';
+}
+
+function showFeedback(type, msg) {
+  const el = document.getElementById('feedback');
+  el.className = 'feedback ' + type;
+  el.textContent = msg;
+}
+
+async function sendToNotion() {
+  const val = parseInt(slider.value);
+  const nom = document.getElementById('nom').value.trim() || ('Mesure — valeur ' + val);
+  const btn = document.getElementById('send-btn');
+
+  btn.disabled = true;
+  btn.textContent = 'Envoi en cours…';
+  showFeedback('loading', 'Connexion à Notion…');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        system: 'You are a Notion API assistant. Use the Notion MCP to create a new page in a database. Reply ONLY with JSON: {"success": true} or {"success": false, "error": "..."}. No other text.',
+        messages: [{
+          role: 'user',
+          content: 'Create a new page in Notion database ID "' + DB_ID + '" with: "Nom" (title): "' + nom + '", "Valeur (0-100)" (number): ' + val
+        }],
+        mcp_servers: [{ type: 'url', url: 'https://mcp.notion.com/mcp', name: 'notion' }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = (data.content || []).map(b => b.text || '').join('');
+    let result;
+    try { result = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch { result = { success: false, error: 'Réponse inattendue' }; }
+
+    if (result.success) {
+      showFeedback('success', 'Enregistré ! Valeur ' + val + ' → ' + (3.36 + 0.06 * val).toFixed(2).replace('.', ',') + ' kWh');
+      document.getElementById('nom').value = '';
+    } else {
+      showFeedback('error', 'Erreur : ' + (result.error || 'inconnue'));
+    }
+  } catch(e) {
+    showFeedback('error', 'Erreur réseau : ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enregistrer dans Notion';
+}
+
+update(50);
+</script>
+</body>
+</html>
